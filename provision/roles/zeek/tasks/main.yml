@@ -1,0 +1,29 @@
+- name: Run apt-get update
+  apt:
+    update_cache: yes
+- name: Getting zeek dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - cmake
+      - make
+      - gcp
+      - g++
+      - bison
+      - libpcap-dev
+      - libssl-dev
+      - python-dev
+      - swig
+      - flex
+      - zlib1g-dev
+      - zeek-core
+      - zeekctl
+- name: Grab binary package
+  get_url:
+    url: https://download.opensuse.org/repositories/security:/zeek/xUbuntu_14.04/amd64/zeek_3.0.0-0_amd64.deb
+    dest: "{{ home_dir }}"
+- name: Install zeek
+  apt:
+    deb: "{{ home_dir }}/zeek_3.0.0-0_amd64.deb"
+    state: present

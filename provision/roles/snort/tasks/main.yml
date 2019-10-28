@@ -1,0 +1,74 @@
+- name: Run apt-get update
+  apt:
+    update_cache: yes
+- name: Getting Snort dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - gcc
+      - libpcre3-dev
+      - zlib1g-dev
+      - libpcap-dev
+      - openssl
+      - libssl-dev
+      - libnghttp2-dev
+      - libdumbnet-dev
+      - bison
+      - flex
+      - libluajit-5.1-dev
+- name: Creating tmp folder
+  file:
+    path: "{{ home_dir }}/snort_src"
+    state: directory
+- name: Get Snort DAQ
+  get_url:
+    url: https://www.snort.org/downloads/snort/daq-2.0.6.tar.gz
+    dest: "{{ home_dir }}/snort_src"
+- name: Extract Snort DAQ
+  unarchive:
+    src: "{{ home_dir }}/snort_src/daq-2.0.6.tar.gz"
+    dest: "{{ home_dir }}/snort_src"
+    copy: no
+- name: Run configure and make install
+  shell:
+    cmd: ./configure && make install
+    chdir: "{{ home_dir }}/snort_src/daq-2.0.6"
+- name: Get actual Snort
+  get_url:
+    url: https://www.snort.org/downloads/snort/snort-2.9.15.tar.gz
+    dest: "{{ home_dir }}/snort_src"
+- name: Extract Snort
+  unarchive:
+    src: "{{ home_dir }}/snort_src/snort-2.9.15.tar.gz"
+    dest: "{{ home_dir }}/snort_src"
+    copy: no
+- name: Run configure and make install
+  shell:
+    cmd: ./configure --enable-sourcefire && make install
+    chdir: "{{ home_dir }}/snort_src/snort-2.9.15"
+- name: Updating shared libraries
+  shell:
+    cmd: ldconfig
+- name: Linking snort paths
+  shell:
+    cmd: "ln -s /usr/local/bin/snort /usr/sbin/snort"
+  ignore_errors: yes
+- name: Setting up username and folder strcture
+  shell:
+    cmd: groupadd snort && useradd snort -r -s /sbin/nologin -c SNORT_IDS -g snort
+  ignore_errors: yes  
+- name: Creating folder structure for Snort
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: snort
+    group: snort
+    mode: 5775
+  loop:
+    - /etc/snort/
+    - /etc/snort/rules
+    - /etc/snort/preproc_rules
+    - /var/log/snort
+    - /usr/local/lib/snort_dynamicrules
+  ignore_errors: yes
