@@ -5,6 +5,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "ids-snort" do |machine|
         machine.vm.hostname = "snort"
         machine.vm.network "private_network", ip: "192.168.0.10"
+        machine.vm.provision "file", source: "./docker-compose.yml", destination: "/home/vagrant/docker_compose/docker-compose.yml"
         machine.vm.provision "ansible", playbook: "provision/playbook.yml"
         machine.vm.provision "shell", inline: <<-SHELL
         cd /home/vagrant/snort_src/snort-2.9.15/etc
@@ -13,6 +14,8 @@ Vagrant.configure("2") do |config|
         cp -avr src/dynamic-preprocessors/build/usr/local/lib/snort_dynamicpreprocessor/* /usr/local/lib/snort_dynamicpreprocessor/
         sed -i "s/include \$RULE\_PATH/#include \$RULE\_PATH/" /etc/snort/snort.conf
         SHELL
+#        machine.vm.provision "shell",
+#            path: "./docker_install.sh"
     end
 
  #   config.vm.define "ids-suricata" do |machine|
